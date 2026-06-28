@@ -1,9 +1,3 @@
-databases:
-  - name: businessflow-db
-    plan: free
-    databaseName: businessflow
-    user: businessflow
-
 services:
   - type: web
     name: businessflow-backend
@@ -14,9 +8,7 @@ services:
     startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: businessflow-db
-          property: connectionString
+        sync: false
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: CORS_ORIGINS
