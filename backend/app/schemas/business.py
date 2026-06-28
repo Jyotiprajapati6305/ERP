@@ -79,6 +79,15 @@ class BusinessCreate(BaseModel):
     wizard_answers: AIWizardAnswers = Field(default_factory=AIWizardAnswers)
 
 
+class BusinessSettingsOut(BaseModel):
+    ai_enabled: bool
+    ai_chat_enabled: bool
+    ai_insights_enabled: bool
+    modules_enabled: dict[str, bool]
+
+    model_config = {"from_attributes": True}
+
+
 class BusinessOut(BaseModel):
     id: uuid.UUID
     name: str

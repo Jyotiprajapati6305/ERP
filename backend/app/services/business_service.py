@@ -59,3 +59,11 @@ async def get_business_for_owner(db: AsyncSession, owner: User, business_id: uui
     if business is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Business not found")
     return business
+
+
+async def get_business_settings(db: AsyncSession, owner: User, business_id: uuid.UUID) -> BusinessSettings:
+    await get_business_for_owner(db, owner, business_id)
+    settings = await db.scalar(select(BusinessSettings).where(BusinessSettings.business_id == business_id))
+    if settings is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Business settings not found")
+    return settings

@@ -6,8 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.user import User
-from app.schemas.business import BusinessCreate, BusinessOut
-from app.services.business_service import create_business, get_business_for_owner, list_businesses
+from app.schemas.business import BusinessCreate, BusinessOut, BusinessSettingsOut
+from app.services.business_service import (
+    create_business,
+    get_business_for_owner,
+    get_business_settings,
+    list_businesses,
+)
 
 router = APIRouter(prefix="/businesses", tags=["businesses"])
 
@@ -39,3 +44,13 @@ async def get_one(
 ):
     business = await get_business_for_owner(db, current_user, business_id)
     return BusinessOut.model_validate(business)
+
+
+@router.get("/{business_id}/settings", response_model=BusinessSettingsOut)
+async def get_settings(
+    business_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    settings = await get_business_settings(db, current_user, business_id)
+    return BusinessSettingsOut.model_validate(settings)

@@ -33,6 +33,40 @@ interface WizardAnswers {
   wants_ai_assistance: boolean;
 }
 
+const DEFAULT_WIZARD_ANSWERS: WizardAnswers = {
+  sells_products: false,
+  has_physical_inventory: false,
+  sells_online: false,
+  has_employees: false,
+  wants_billing_pos: false,
+  purchases_from_suppliers: false,
+  needs_accounting: false,
+  wants_ai_assistance: false,
+};
+
+// Pre-fill the AI wizard based on the business type chosen in step 2,
+// since most shops/retailers need inventory+POS while service/freelance
+// businesses don't.
+const BUSINESS_TYPE_DEFAULTS: Record<string, Partial<WizardAnswers>> = {
+  gift_shop: { sells_products: true, has_physical_inventory: true, wants_billing_pos: true, purchases_from_suppliers: true, sells_online: true },
+  grocery_store: { sells_products: true, has_physical_inventory: true, wants_billing_pos: true, purchases_from_suppliers: true },
+  bakery: { sells_products: true, has_physical_inventory: true, wants_billing_pos: true, purchases_from_suppliers: true },
+  restaurant: { sells_products: true, has_physical_inventory: true, wants_billing_pos: true, has_employees: true, purchases_from_suppliers: true },
+  clothing_store: { sells_products: true, has_physical_inventory: true, wants_billing_pos: true, sells_online: true, purchases_from_suppliers: true },
+  electronics_shop: { sells_products: true, has_physical_inventory: true, wants_billing_pos: true, sells_online: true, purchases_from_suppliers: true },
+  pharmacy: { sells_products: true, has_physical_inventory: true, wants_billing_pos: true, purchases_from_suppliers: true },
+  salon: { wants_billing_pos: true, has_employees: true },
+  manufacturer: { sells_products: true, has_physical_inventory: true, has_employees: true, purchases_from_suppliers: true, needs_accounting: true },
+  wholesaler: { sells_products: true, has_physical_inventory: true, purchases_from_suppliers: true, needs_accounting: true },
+  service_business: { needs_accounting: true },
+  freelancer: { needs_accounting: true },
+  digital_agency: { has_employees: true, needs_accounting: true },
+  interior_designer: { needs_accounting: true },
+  event_planner: { needs_accounting: true, purchases_from_suppliers: true },
+  online_seller: { sells_products: true, sells_online: true, has_physical_inventory: true, purchases_from_suppliers: true },
+  other: {},
+};
+
 const STEP_COUNT = 4;
 
 export default function BusinessSetup() {
@@ -56,19 +90,15 @@ export default function BusinessSetup() {
     timezone: "Asia/Kolkata",
   });
 
-  const [wizardAnswers, setWizardAnswers] = useState<WizardAnswers>({
-    sells_products: false,
-    has_physical_inventory: false,
-    sells_online: false,
-    has_employees: false,
-    wants_billing_pos: false,
-    purchases_from_suppliers: false,
-    needs_accounting: false,
-    wants_ai_assistance: false,
-  });
+  const [wizardAnswers, setWizardAnswers] = useState<WizardAnswers>(DEFAULT_WIZARD_ANSWERS);
 
   function toggleAnswer(key: keyof WizardAnswers) {
     setWizardAnswers((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  function selectBusinessType(type: string) {
+    setForm({ ...form, industry_type: type });
+    setWizardAnswers({ ...DEFAULT_WIZARD_ANSWERS, ...BUSINESS_TYPE_DEFAULTS[type] });
   }
 
   async function finish() {
@@ -159,7 +189,7 @@ export default function BusinessSetup() {
               {BUSINESS_TYPES.map((type) => (
                 <button
                   key={type}
-                  onClick={() => setForm({ ...form, industry_type: type })}
+                  onClick={() => selectBusinessType(type)}
                   className={`rounded-xl border px-3 py-2 text-sm capitalize ${
                     form.industry_type === type
                       ? "border-black bg-black text-white"
@@ -248,6 +278,9 @@ export default function BusinessSetup() {
         {step === 4 && (
           <div className="space-y-4">
             <p className="text-sm font-medium">A few questions to set up your dashboard</p>
+            <p className="text-xs text-gray-500">
+              Pre-filled based on "{form.industry_type.replace("_", " ")}" &mdash; adjust as needed.
+            </p>
             <div className="space-y-2">
               {WIZARD_QUESTIONS.map((q) => (
                 <label key={q.key} className="flex items-center gap-2 text-sm text-gray-700">
