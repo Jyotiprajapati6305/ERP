@@ -36,7 +36,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function register(payload: RegisterPayload) {
-    await api.post("/auth/register", payload);
+    const { data } = await api.post("/auth/register", payload);
+    localStorage.setItem("access_token", data.access_token);
+    setUser(data.user);
   }
 
   function logout() {

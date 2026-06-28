@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { isAxiosError } from "axios";
 
 import { useAuth } from "@/lib/auth";
 
 export default function Register() {
   const { register } = useAuth();
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
@@ -14,7 +15,6 @@ export default function Register() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,7 +39,7 @@ export default function Register() {
         confirm_password: confirmPassword,
         accept_terms: acceptTerms,
       });
-      setSubmitted(true);
+      navigate("/business-setup");
     } catch (err) {
       if (isAxiosError(err) && err.response?.data?.detail) {
         setError(err.response.data.detail);
@@ -51,23 +51,6 @@ export default function Register() {
     } finally {
       setLoading(false);
     }
-  }
-
-  if (submitted) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-white px-4">
-        <div className="w-full max-w-sm rounded-xl border border-gray-200 p-8 text-center">
-          <h1 className="mb-2 text-xl font-semibold">Check your email</h1>
-          <p className="text-sm text-gray-600">
-            We sent a verification link to <span className="font-medium">{email}</span>. Click it to activate your
-            account, then sign in.
-          </p>
-          <Link to="/login" className="mt-6 inline-block text-sm font-medium text-black underline">
-            Back to sign in
-          </Link>
-        </div>
-      </div>
-    );
   }
 
   return (

@@ -43,20 +43,7 @@ class UserOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class RegisterResponse(BaseModel):
-    message: str
-    user: UserOut
-
-
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserOut
-
-
-class VerifyEmailRequest(BaseModel):
-    token: str
-
-
-class ResendVerificationRequest(BaseModel):
-    email: EmailStr
