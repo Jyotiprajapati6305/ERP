@@ -7,11 +7,10 @@ databases:
 services:
   - type: web
     name: businessflow-backend
-    runtime: python
-    rootDir: backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -24,10 +23,10 @@ services:
 
   - type: web
     name: businessflow-frontend
-    runtime: static
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    plan: free
     envVars:
       - key: VITE_API_URL
         value: https://businessflow-backend.onrender.com/api/v1
