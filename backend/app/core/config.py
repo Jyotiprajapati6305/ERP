@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:5173"
     VERIFICATION_TOKEN_EXPIRE_MINUTES: int = 60 * 24
 
+    RESEND_API_KEY: str = ""
+    EMAIL_FROM: str = "onboarding@resend.dev"
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]

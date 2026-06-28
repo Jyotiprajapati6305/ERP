@@ -22,6 +22,10 @@ services:
         value: https://businessflow-frontend-xzso.onrender.com
       - key: FRONTEND_URL
         value: https://businessflow-frontend-xzso.onrender.com
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: onboarding@resend.dev
 
   - type: web
     name: businessflow-frontend
