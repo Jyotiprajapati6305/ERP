@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { isAxiosError } from "axios";
 
 import { useAuth } from "@/lib/auth";
 
@@ -18,8 +19,14 @@ export default function Login() {
     try {
       await login(email, password);
       navigate("/dashboard");
-    } catch {
-      setError("Invalid email or password");
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.detail) {
+        setError(err.response.data.detail);
+      } else if (isAxiosError(err) && !err.response) {
+        setError("Could not reach the server. Please try again.");
+      } else {
+        setError("Invalid email or password");
+      }
     } finally {
       setLoading(false);
     }

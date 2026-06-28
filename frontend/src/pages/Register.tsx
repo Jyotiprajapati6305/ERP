@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { isAxiosError } from "axios";
 
 import { useAuth } from "@/lib/auth";
 
@@ -19,8 +20,14 @@ export default function Register() {
     try {
       await register(name, email, password);
       navigate("/business-setup");
-    } catch {
-      setError("Could not create account");
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.detail) {
+        setError(err.response.data.detail);
+      } else if (isAxiosError(err) && !err.response) {
+        setError("Could not reach the server. Please try again.");
+      } else {
+        setError("Could not create account");
+      }
     } finally {
       setLoading(false);
     }
