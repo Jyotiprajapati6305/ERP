@@ -21,6 +21,10 @@ class Business(Base):
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     address: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    number_of_employees: Mapped[int | None] = mapped_column(nullable=True)
+    country: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    state: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    city: Mapped[str | None] = mapped_column(String(100), nullable=True)
     currency: Mapped[str] = mapped_column(String(10), default="INR")
     timezone: Mapped[str] = mapped_column(String(64), default="Asia/Kolkata")
 

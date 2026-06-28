@@ -7,11 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.business import Business
 from app.models.settings import BusinessSettings
 from app.models.user import User
-from app.schemas.business import INDUSTRY_TYPES, OPTIONAL_MODULES, BusinessCreate
+from app.schemas.business import BUSINESS_TYPES, BusinessCreate, modules_from_wizard
 
 
 async def create_business(db: AsyncSession, owner: User, data: BusinessCreate) -> Business:
-    if data.industry_type not in INDUSTRY_TYPES:
+    if data.industry_type not in BUSINESS_TYPES:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid industry_type")
 
     business = Business(
@@ -19,6 +19,10 @@ async def create_business(db: AsyncSession, owner: User, data: BusinessCreate) -
         name=data.business_name,
         logo=data.logo,
         industry_type=data.industry_type,
+        number_of_employees=data.number_of_employees,
+        country=data.country,
+        state=data.state,
+        city=data.city,
         gst_number=data.gst_number,
         phone=data.phone,
         email=data.email,
@@ -29,12 +33,13 @@ async def create_business(db: AsyncSession, owner: User, data: BusinessCreate) -
     db.add(business)
     await db.flush()
 
+    enabled = modules_from_wizard(data.industry_type, data.wizard_answers)
     settings = BusinessSettings(
         business_id=business.id,
-        ai_enabled=False,
-        ai_chat_enabled=False,
-        ai_insights_enabled=False,
-        modules_enabled={m: (m in data.enabled_modules) for m in OPTIONAL_MODULES + data.enabled_modules},
+        ai_enabled=data.wizard_answers.wants_ai_assistance,
+        ai_chat_enabled=data.wizard_answers.wants_ai_assistance,
+        ai_insights_enabled=data.wizard_answers.wants_ai_assistance,
+        modules_enabled={m: True for m in enabled},
     )
     db.add(settings)
     await db.commit()

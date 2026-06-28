@@ -1,19 +1,39 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { isAxiosError } from "axios";
 
 import { api } from "@/lib/api";
 
-const INDUSTRY_TYPES = [
-  "retail", "clothing", "grocery", "electronics",
-  "pharmacy", "restaurant", "manufacturing", "service",
+const BUSINESS_TYPES = [
+  "gift_shop", "grocery_store", "bakery", "restaurant", "clothing_store",
+  "electronics_shop", "pharmacy", "salon", "manufacturer", "wholesaler",
+  "service_business", "freelancer", "digital_agency", "interior_designer",
+  "event_planner", "online_seller", "other",
 ];
 
-const DEFAULT_MODULES = [
-  "dashboard", "products", "inventory", "customers",
-  "suppliers", "sales", "purchases", "expenses", "reports", "settings",
+const WIZARD_QUESTIONS: { key: keyof WizardAnswers; label: string }[] = [
+  { key: "sells_products", label: "Do you sell physical products?" },
+  { key: "has_physical_inventory", label: "Do you have physical inventory?" },
+  { key: "sells_online", label: "Do you sell online?" },
+  { key: "has_employees", label: "Do you have employees?" },
+  { key: "wants_billing_pos", label: "Do you want billing/POS?" },
+  { key: "purchases_from_suppliers", label: "Do you purchase from suppliers?" },
+  { key: "needs_accounting", label: "Do you need accounting?" },
+  { key: "wants_ai_assistance", label: "Do you want AI assistance?" },
 ];
 
-const OPTIONAL_MODULES = ["employees", "payroll", "advanced_crm", "pos", "ai_assistant"];
+interface WizardAnswers {
+  sells_products: boolean;
+  has_physical_inventory: boolean;
+  sells_online: boolean;
+  has_employees: boolean;
+  wants_billing_pos: boolean;
+  purchases_from_suppliers: boolean;
+  needs_accounting: boolean;
+  wants_ai_assistance: boolean;
+}
+
+const STEP_COUNT = 4;
 
 export default function BusinessSetup() {
   const navigate = useNavigate();
@@ -28,14 +48,27 @@ export default function BusinessSetup() {
     phone: "",
     email: "",
     address: "",
+    number_of_employees: "",
+    country: "",
+    state: "",
+    city: "",
     currency: "INR",
     timezone: "Asia/Kolkata",
   });
 
-  const [optionalModules, setOptionalModules] = useState<string[]>([]);
+  const [wizardAnswers, setWizardAnswers] = useState<WizardAnswers>({
+    sells_products: false,
+    has_physical_inventory: false,
+    sells_online: false,
+    has_employees: false,
+    wants_billing_pos: false,
+    purchases_from_suppliers: false,
+    needs_accounting: false,
+    wants_ai_assistance: false,
+  });
 
-  function toggleModule(m: string) {
-    setOptionalModules((prev) => (prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m]));
+  function toggleAnswer(key: keyof WizardAnswers) {
+    setWizardAnswers((prev) => ({ ...prev, [key]: !prev[key] }));
   }
 
   async function finish() {
@@ -43,16 +76,27 @@ export default function BusinessSetup() {
     setLoading(true);
     try {
       await api.post("/businesses", {
-        ...form,
+        business_name: form.business_name,
+        industry_type: form.industry_type,
         gst_number: form.gst_number || null,
         phone: form.phone || null,
         email: form.email || null,
         address: form.address || null,
-        enabled_modules: [...DEFAULT_MODULES, ...optionalModules],
+        number_of_employees: form.number_of_employees ? Number(form.number_of_employees) : null,
+        country: form.country || null,
+        state: form.state || null,
+        city: form.city || null,
+        currency: form.currency,
+        timezone: form.timezone,
+        wizard_answers: wizardAnswers,
       });
       navigate("/dashboard");
-    } catch {
-      setError("Could not create business");
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.data?.detail) {
+        setError(err.response.data.detail);
+      } else {
+        setError("Could not create business");
+      }
     } finally {
       setLoading(false);
     }
@@ -62,7 +106,9 @@ export default function BusinessSetup() {
     <div className="flex min-h-screen items-center justify-center bg-white px-4">
       <div className="w-full max-w-lg rounded-xl border border-gray-200 p-8">
         <h1 className="mb-1 text-xl font-semibold">Set up your business</h1>
-        <p className="mb-6 text-sm text-gray-500">Step {step} of 3</p>
+        <p className="mb-6 text-sm text-gray-500">
+          Step {step} of {STEP_COUNT}
+        </p>
 
         {step === 1 && (
           <div className="space-y-4">
@@ -91,7 +137,7 @@ export default function BusinessSetup() {
               className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-black"
             />
             <input
-              placeholder="Address"
+              placeholder="Business logo URL (optional)"
               value={form.address}
               onChange={(e) => setForm({ ...form, address: e.target.value })}
               className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-black"
@@ -110,7 +156,7 @@ export default function BusinessSetup() {
           <div className="space-y-4">
             <p className="text-sm font-medium">Select business type</p>
             <div className="grid grid-cols-2 gap-2">
-              {INDUSTRY_TYPES.map((type) => (
+              {BUSINESS_TYPES.map((type) => (
                 <button
                   key={type}
                   onClick={() => setForm({ ...form, industry_type: type })}
@@ -120,7 +166,7 @@ export default function BusinessSetup() {
                       : "border-gray-300 text-gray-700"
                   }`}
                 >
-                  {type}
+                  {type.replace("_", " ")}
                 </button>
               ))}
             </div>
@@ -144,26 +190,80 @@ export default function BusinessSetup() {
 
         {step === 3 && (
           <div className="space-y-4">
-            <p className="text-sm font-medium">Optional modules</p>
-            <div className="grid grid-cols-2 gap-2">
-              {OPTIONAL_MODULES.map((m) => (
-                <button
-                  key={m}
-                  onClick={() => toggleModule(m)}
-                  className={`rounded-xl border px-3 py-2 text-sm capitalize ${
-                    optionalModules.includes(m)
-                      ? "border-black bg-black text-white"
-                      : "border-gray-300 text-gray-700"
-                  }`}
-                >
-                  {m.replace("_", " ")}
-                </button>
+            <input
+              type="number"
+              min={0}
+              placeholder="Number of employees"
+              value={form.number_of_employees}
+              onChange={(e) => setForm({ ...form, number_of_employees: e.target.value })}
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-black"
+            />
+            <input
+              placeholder="Country"
+              value={form.country}
+              onChange={(e) => setForm({ ...form, country: e.target.value })}
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-black"
+            />
+            <input
+              placeholder="State"
+              value={form.state}
+              onChange={(e) => setForm({ ...form, state: e.target.value })}
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-black"
+            />
+            <input
+              placeholder="City"
+              value={form.city}
+              onChange={(e) => setForm({ ...form, city: e.target.value })}
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-black"
+            />
+            <input
+              placeholder="Currency (e.g. INR)"
+              value={form.currency}
+              onChange={(e) => setForm({ ...form, currency: e.target.value })}
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-black"
+            />
+            <input
+              placeholder="Time zone (e.g. Asia/Kolkata)"
+              value={form.timezone}
+              onChange={(e) => setForm({ ...form, timezone: e.target.value })}
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-black"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => setStep(2)}
+                className="w-full rounded-xl border border-gray-300 py-2 text-sm font-medium"
+              >
+                Back
+              </button>
+              <button
+                onClick={() => setStep(4)}
+                className="w-full rounded-xl bg-black py-2 text-sm font-medium text-white"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 4 && (
+          <div className="space-y-4">
+            <p className="text-sm font-medium">A few questions to set up your dashboard</p>
+            <div className="space-y-2">
+              {WIZARD_QUESTIONS.map((q) => (
+                <label key={q.key} className="flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={wizardAnswers[q.key]}
+                    onChange={() => toggleAnswer(q.key)}
+                  />
+                  {q.label}
+                </label>
               ))}
             </div>
             {error && <p className="text-sm text-error">{error}</p>}
             <div className="flex gap-2">
               <button
-                onClick={() => setStep(2)}
+                onClick={() => setStep(3)}
                 className="w-full rounded-xl border border-gray-300 py-2 text-sm font-medium"
               >
                 Back
