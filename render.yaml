@@ -19,7 +19,7 @@ services:
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: CORS_ORIGINS
-        value: https://businessflow-frontend.onrender.com
+        value: https://businessflow-frontend-xzso.onrender.com
 
   - type: web
     name: businessflow-frontend
@@ -29,4 +29,4 @@ services:
     plan: free
     envVars:
       - key: VITE_API_URL
-        value: https://businessflow-backend.onrender.com/api/v1
+        value: https://businessflow-backend-xzso.onrender.com/api/v1
