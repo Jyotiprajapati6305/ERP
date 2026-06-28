@@ -8,10 +8,19 @@ interface User {
   email: string;
 }
 
+interface RegisterPayload {
+  name: string;
+  email: string;
+  mobile_number: string;
+  password: string;
+  confirm_password: string;
+  accept_terms: boolean;
+}
+
 interface AuthContextValue {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
   logout: () => void;
 }
 
@@ -26,10 +35,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(data.user);
   }
 
-  async function register(name: string, email: string, password: string) {
-    const { data } = await api.post("/auth/register", { name, email, password });
-    localStorage.setItem("access_token", data.access_token);
-    setUser(data.user);
+  async function register(payload: RegisterPayload) {
+    await api.post("/auth/register", payload);
   }
 
   function logout() {

@@ -20,6 +20,8 @@ services:
         generateValue: true
       - key: CORS_ORIGINS
         value: https://businessflow-frontend-xzso.onrender.com
+      - key: FRONTEND_URL
+        value: https://businessflow-frontend-xzso.onrender.com
 
   - type: web
     name: businessflow-frontend

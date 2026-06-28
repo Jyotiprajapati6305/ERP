@@ -5,6 +5,7 @@ import BusinessSetup from "@/pages/BusinessSetup";
 import Dashboard from "@/pages/Dashboard";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import VerifyEmail from "@/pages/VerifyEmail";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const hasToken = Boolean(localStorage.getItem("access_token"));
@@ -18,6 +19,7 @@ function Routed() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       <Route
         path="/business-setup"
         element={
